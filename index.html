@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Chat App</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .chat-container {
+        border: 1px solid #ccc;
+        padding: 10px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .message-container {
+        margin-bottom: 10px;
+      }
+
+      .message-container p {
+        margin: 0;
+      }
+
+      .message-container .username {
+        font-weight: bold;
+      }
+
+      .message-container .text {
+        margin-top: 5px;
+      }
+
+      .input-container {
+        margin-top: 10px;
+      }
+
+      .input-container input[type="text"] {
+        width: 80%;
+
+        padding: 5px;
+      }
+
+      .input-container button {
+        padding: 5px 10px;
+      }
+
+      /* Added CSS styles for chat box */
+
+      .chat-box {
+        max-height: 300px;
+        height: 300px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <h1>Chat App</h1>
+
+      <div id="status"></div>
+    </div>
+
+    <div class="chat-container">
+      <div class="chat-box" id="messages"></div>
+
+      <div class="input-container">
+        <input type="text" id="nameInput" placeholder="Your Name" />
+
+        <input type="text" id="messageInput" placeholder="Type your message" />
+
+        <button onclick="sendMessage()">Send</button>
+      </div>
+
+      <button onclick="closeConnection()">Close Connection</button>
+    </div>
+
+    <script>
+      // This is a natively supported api from Javascript and all modern browsers work with it.
+
+      // /ws has nothing to do with the web socket protocol, it's just the route I setup the WebSocket on'
+
+      const socketURL = "ws://localhost:8080/ws";
+
+      const socket = new WebSocket(socketURL);
+
+      const messagesContainer = document.getElementById("messages");
+
+      const statusDiv = document.getElementById("status");
+
+      // This is listening for the open event, when the web SocketOpens
+
+      // in this case when the page initially loads.
+
+      socket.addEventListener("open", () => {
+        statusDiv.textContent = "WebSocket is open";
+
+        statusDiv.style.color = "green";
+
+        console.log("WebSocket connection established.");
+      });
+
+      // This event listener is listening for a "message" from the server.
+
+      // "Message" is baked into the socket api and it's how a server response is defined with websockets.
+
+      socket.addEventListener("message", (event) => {
+        const message = JSON.parse(event.data);
+
+        console.log("Received message:", message);
+
+        const messageContainer = document.createElement("div");
+
+        messageContainer.className = "message-container";
+
+        const usernameElement = document.createElement("p");
+
+        usernameElement.className = "username";
+
+        usernameElement.innerText = message.username;
+
+        const textElement = document.createElement("p");
+
+        textElement.className = "text";
+
+        textElement.innerText = message.text;
+
+        messageContainer.appendChild(usernameElement);
+
+        messageContainer.appendChild(textElement);
+
+        messagesContainer.appendChild(messageContainer);
+      });
+
+      socket.addEventListener("close", () => {
+        console.log("WebSocket is closed");
+
+        statusDiv.style.color = "red";
+
+        statusDiv.textContent = "WebSocket is closed";
+      });
+
+      const closeConnection = () => {
+        socket.close();
+      };
+
+      const sendMessage = () => {
+        const name = document.getElementById("nameInput").value;
+
+        const text = document.getElementById("messageInput").value;
+
+        const message = {
+          username: name,
+          text,
+        };
+
+        socket.send(JSON.stringify(message));
+
+        document.getElementById("messageInput").value = "";
+      };
+    </script>
+  </body>
+</html>
